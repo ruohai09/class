@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>班级朋友圈 · 我家幸福年</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0 30px 0;
+        }
+
+        /* 整体容器 — 移动端卡片风格 */
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            padding: 0 16px 20px 16px;
+            margin-top: 8px;
+        }
+
+        /* 顶部标题栏 (模拟朋友圈标题) */
+        .header {
+            padding: 18px 0 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f0f0;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 620;
+            background: linear-gradient(145deg, #cc4e3c, #e68a3d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+
+        .header span {
+            background: #f8f8f8;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            color: #7b7f83;
+            font-weight: 500;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        /* 发布框 — 永远在最上面 */
+        .publish-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 16px 14px;
+            margin: 20px 0 18px 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0,0,0,0.02);
+            border: 1px solid #fff;
+        }
+
+        .publish-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            background: #fdeae7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #d2695a;
+            border: 2px solid #fee3da;
+            flex-shrink: 0;
+        }
+
+        .publish-input {
+            flex: 1;
+            background: #f8fafc;
+            border: 1px solid #e6e9ec;
+            border-radius: 30px;
+            padding: 12px 18px;
+            font-size: 15px;
+            color: #1e1e1e;
+            outline: none;
+            transition: 0.15s;
+        }
+
+        .publish-input:focus {
+            border-color: #f1a37a;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(241, 163, 122, 0.12);
+        }
+
+        .publish-input::placeholder {
+            color: #a7a9ac;
+            font-weight: 400;
+        }
+
+        /* 图片上传区域 */
+        .upload-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .upload-label {
+            background: #f2f4f6;
+            border-radius: 40px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4c4f54;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .upload-label:hover {
+            background: #e9ecef;
+            border-color: #dadde1;
+        }
+
+        .upload-label i {
+            font-size: 18px;
+            color: #e27c5c;
+        }
+
+        #image-preview {
+            max-height: 60px;
+            max-width: 80px;
+            border-radius: 16px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eef1f4;
+            object-fit: cover;
+        }
+
+        .publish-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .publish-btn {
+            background: #e7794b;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 44px;
+            color: white;
+            font-size: 16px;
+            font-weight: 590;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 14px rgba(231, 121, 75, 0.25);
+            cursor: pointer;
+            transition: 0.2s;
+            width: fit-content;
+            border: 1px solid #d56739;
+        }
+
+        .publish-btn:active {
+            transform: scale(0.96);
+            background: #d56739;
+            box-shadow: 0 2px 6px rgba(213, 103, 57, 0.4);
+        }
+
+        /* 朋友圈 feed 流 */
+        .feed {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            margin-top: 8px;
+        }
+
+        /* 单条朋友圈卡片 */
+        .post-card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 18px 16px 14px 16px;
+            box-shadow: 0 2px 14px rgba(0, 0, 0, 0.02), 0 0 0 1px #f2f4f8;
+            transition: 0.15s;
+            border: 1px solid #fff;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .post-avatar {
+            width: 42px;
+            height: 42px;
+            background: #e2eafc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            font-weight: 600;
+            color: #43628b;
+            border: 2px solid #d4e0f0;
+            text-transform: uppercase;
+        }
+
+        .post-user {
+            font-weight: 650;
+            font-size: 16px;
+            color: #1c1e22;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: #93989f;
+            margin-top: 2px;
+        }
+
+        .post-content {
+            font-size: 16px;
+            line-height: 1.45;
+            color: #24282e;
+            margin: 10px 0 12px 12px;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        /* 朋友圈图片 */
+        .post-image {
+            width: 100%;
+            max-height: 360px;
+            object-fit: cover;
+            border-radius: 24px;
+            background: #f7f9fb;
+            margin: 8px 0 12px 0;
+            border: 1px solid #edf1f5;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+        }
+
+        /* 互动栏 (点赞+评论) */
+        .interaction-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid #eceef2;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 520;
+            color: #5d6167;
+            cursor: pointer;
+            transition: 0.12s;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .action-btn.liked {
+            color: #e65f3b;
+            font-weight: 580;
+        }
+
+        .action-btn.liked i {
+            color: #e65f3b;
+        }
+
+        .action-btn i {
+            font-size: 20px;
+            color: #7f858d;
+        }
+
+        .action-btn:active {
+            background: #f2f4f6;
+        }
+
+        .like-count, .comment-count {
+            font-size: 14px;
+            margin-left: 2px;
+        }
+
+        /* 评论区 */
+        .comments-section {
+            margin-top: 15px;
+            background: #f8fafd;
+            border-radius: 20px;
+            padding: 12px 14px;
+            display: none;
+        }
+
+        .comments-section.show {
+            display: block;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .comment-avatar {
+            width: 28px;
+            height: 28px;
+            background: #d8e2ef;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3e5670;
+            text-transform: uppercase;
+        }
+
+        .comment-content {
+            background: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            flex: 1;
+            word-break: break-word;
+            border: 1px solid #eef1f6;
+            color: #22262b;
+        }
+
+        .comment-name {
+            font-weight: 650;
+            font-size: 13px;
+            margin-bottom: 2px;
+            color: #2e3c4f;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .add-comment {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: white;
+            border: 1px solid #dce1e8;
+            border-radius: 30px;
+            padding: 10px 16px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .comment-input:focus {
+            border-color: #e8845c;
+        }
+
+        .comment-submit {
+            background: #e8845c;
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 550;
+            cursor: pointer;
+        }
+
+        .empty-feed {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8f969e;
+            background: #f9fbfd;
+            border-radius: 32px;
+            font-size: 16px;
+            margin: 30px 0;
+            border: 1px dashed #d0d7de;
+        }
+
+        /* 一些emoji/icon模拟 (因为纯html不能用icon库，就用unicode符号) */
+        .icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .footer-note {
+            font-size: 12px;
+            color: #b0b6be;
+            text-align: center;
+            margin: 25px 0 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📸 班级朋友圈 · 年味摄影展</h1>
+        <span>🐉 我家幸福年</span>
+    </div>
+
+    <!-- 发布器 -->
+    <div class="publish-card">
+        <div class="publish-header">
+            <div class="avatar" id="currentUserAvatar">👤</div>
+            <input type="text" class="publish-input" id="postContentInput" placeholder="写一句新年祝福或照片故事...">
+        </div>
+
+        <div class="upload-area">
+            <label for="imageUpload" class="upload-label">
+                <span class="icon">📎</span> 上传过年照片
+            </label>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+            <img id="image-preview" src="#" alt="预览" style="display: none;">
+        </div>
+
+        <div class="publish-actions">
+            <button class="publish-btn" id="publishPostBtn">➕ 发 布 朋 友 圈</button>
+        </div>
+    </div>
+
+    <!-- 朋友圈动态流 -->
+    <div class="feed" id="feedContainer">
+        <!-- 动态会通过js动态渲染 -->
+    </div>
+    <div class="footer-note">—— 长按点赞，分享年味 ——</div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 数据存储 ----------
+        const STORAGE_KEY = 'class_friends_circle';
+
+        // 默认初始数据 (两条示例内容，可选，也可以为空)
+        const defaultPosts = [
+            {
+                id: 'post1',
+                userName: '小摄影师',
+                userAvatar: '📷',
+                content: '今年的年夜饭我拍了又拍，加上暖色滤镜，年味足足的！',
+                image: 'https://images.unsplash.com/photo-1545468800-8cdca8e9d9f8?w=600&auto=format', // 示例年夜饭图片(unsplash)
+                timestamp: Date.now() - 86400000, // 昨天
+                likes: 8,
+                likedByCurrent: false,
+                comments: [
+                    { userName: '李老师', avatar: '👩‍🏫', text: '看得我都饿了😋' },
+                    { userName: '小萌', avatar: '🐣', text: '滤镜选得真好！' }
+                ]
+            },
+            {
+                id: 'post2',
+                userName: '爱笑的全家',
+                userAvatar: '👨‍👩‍👧',
+                content: '第一次自己给全家福加了“专属水印”❤️Y，保护版权～还调亮了暗部。',
+                image: 'https://images.unsplash.com/photo-1601306186259-a0c4e43d8598?w=600&auto=format', // 家庭温馨图片
+                timestamp: Date.now() - 172800000,
+                likes: 15,
+                likedByCurrent: false,
+                comments: [
+                    { userName: '小明', avatar: '😎', text: '水印设计得不错！' }
+                ]
+            }
+        ];
+
+        // 尝试读取本地存储
+        let posts = [];
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                posts = JSON.parse(stored);
+                // 确保每个post有comments数组、likedByCurrent字段 (可能老数据没有)
+                posts = posts.map(p => ({
+                    ...p,
+                    likedByCurrent: p.likedByCurrent || false,
+                    comments: p.comments || []
+                }));
+            } else {
+                posts = defaultPosts;
+            }
+        } catch (e) {
+            console.warn('读取存储失败，使用默认数据', e);
+            posts = defaultPosts;
+        }
+
+        // 保存至localStorage
+        function savePosts() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+        }
+
+        // 辅助函数：获取当前用户 (简化为一个班级昵称，每次会话固定但不同设备可不同)
+        function getCurrentUser() {
+            // 简单用session存储用户名，若无则随机一个
+            let user = sessionStorage.getItem('circle_username');
+            let avatar = sessionStorage.getItem('circle_useravatar');
+            if (!user) {
+                const names = ['小小信息员', '摄影小咖', '年味捕捉员', '光影少年', '修图小能手', '新年快乐'];
+                const avatars = ['🐣', '📸', '🎨', '🧧', '🐲', '✨'];
+                const idx = Math.floor(Math.random() * names.length);
+                user = names[idx];
+                avatar = avatars[idx];
+                sessionStorage.setItem('circle_username', user);
+                sessionStorage.setItem('circle_useravatar', avatar);
+            }
+            return { name: user, avatar: avatar };
+        }
+
+        const currentUser = getCurrentUser();
+        document.getElementById('currentUserAvatar').textContent = currentUser.avatar;
+
+        // DOM元素
+        const feedContainer = document.getElementById('feedContainer');
+        const contentInput = document.getElementById('postContentInput');
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('image-preview');
+        const publishBtn = document.getElementById('publishPostBtn');
+
+        // 临时存储上传的图片base64 (本次上传)
+        let uploadedImageBase64 = null;
+
+        // 图片预览
+        imageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) {
+                imagePreview.style.display = 'none';
+                uploadedImageBase64 = null;
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                uploadedImageBase64 = ev.target.result;
+                imagePreview.src = ev.target.result;
+                imagePreview.style.display = 'block';
+                imagePreview.style.maxWidth = '100%';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 渲染所有朋友圈
+        function renderFeed() {
+            if (!posts || posts.length === 0) {
+                feedContainer.innerHTML = `<div class="empty-feed">📭 还没有人发朋友圈，快来发布第一条「我家幸福年」吧✨</div>`;
+                return;
+            }
+
+            // 按时间倒序排列 (最新的在上面)
+            const sorted = [...posts].sort((a,b) => b.timestamp - a.timestamp);
+
+            let htmlStr = '';
+            sorted.forEach(post => {
+                // 处理时间显示
+                const date = new Date(post.timestamp);
+                const timeStr = `${date.getMonth()+1}月${date.getDate()}日 ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+
+                // 图片区域
+                const imageHtml = post.image ? `<img src="${post.image}" class="post-image" alt="朋友圈图片" onerror="this.style.display='none'">` : '';
+
+                // 点赞按钮样式
+                const likeBtnClass = post.likedByCurrent ? 'action-btn liked' : 'action-btn';
+
+                // 评论区域html
+                let commentsHtml = '';
+                if (post.comments && post.comments.length > 0) {
+                    post.comments.forEach(cmt => {
+                        commentsHtml += `
+                            <div class="comment-item">
+                                <div class="comment-avatar">${cmt.avatar || '💬'}</div>
+                                <div class="comment-content">
+                                    <div class="comment-name">${cmt.userName || '同学'}</div>
+                                    <div class="comment-text">${escapeHtml(cmt.text)}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 评论输入框用post-id标记
+                const commentsSectionId = `comments-${post.id}`;
+
+                htmlStr += `
+                    <div class="post-card" data-post-id="${post.id}">
+                        <div class="post-header">
+                            <div class="post-avatar">${post.userAvatar || '📷'}</div>
+                            <div>
+                                <div class="post-user">${escapeHtml(post.userName || '同学')}</div>
+                                <div class="post-time">${timeStr}</div>
+                            </div>
+                        </div>
+                        <div class="post-content">${escapeHtml(post.content)}</div>
+                        ${imageHtml}
+                        <div class="interaction-bar">
+                            <button class="${likeBtnClass}" data-action="like" data-post-id="${post.id}">
+                                <span class="icon">❤️</span>
+                                <span class="like-count" data-like-id="${post.id}">${post.likes || 0}</span>
+                            </button>
+                            <button class="action-btn" data-action="toggleComment" data-post-id="${post.id}">
+                                <span class="icon">💬</span>
+                                <span class="comment-count">${post.comments?.length || 0}</span>
+                            </button>
+                        </div>
+                        <div class="comments-section" id="${commentsSectionId}">
+                            ${commentsHtml}
+                            <div class="add-comment">
+                                <div class="comment-avatar">${currentUser.avatar}</div>
+                                <input type="text" class="comment-input" placeholder="说一句祝福或评价..." data-comment-input="${post.id}">
+                                <button class="comment-submit" data-submit-comment="${post.id}">发送</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            feedContainer.innerHTML = htmlStr;
+
+            // 给所有点赞按钮绑定事件
+            document.querySelectorAll('[data-action="like"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = btn.dataset.postId;
+                    handleLike(postId);
+                });
+            });
+
+            // 切换评论显示
+            document.querySelectorAll('[data-action="toggleComment"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = btn.dataset.postId;
+                    const commentsSec = document.getElementById(`comments-${postId}`);
+                    if (commentsSec) {
+                        commentsSec.classList.toggle('show');
+                    }
+                });
+            });
+
+            // 评论提交按钮
+            document.querySelectorAll('[data-submit-comment]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const postId = btn.dataset.submitComment;
+                    const input = document.querySelector(`[data-comment-input="${postId}"]`);
+                    if (!input) return;
+                    const text = input.value.trim();
+                    if (text) {
+                        addComment(postId, text);
+                        input.value = '';
+                    }
+                });
+            });
+
+            // 评论输入框支持回车发送
+            document.querySelectorAll('[data-comment-input]').forEach(input => {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const postId = input.dataset.commentInput;
+                        const text = input.value.trim();
+                        if (text) {
+                            addComment(postId, text);
+                            input.value = '';
+                        }
+                    }
+                });
+            });
+        }
+
+        // 简单的防XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // 处理点赞
+        function handleLike(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            if (post.likedByCurrent) {
+                post.likes = Math.max(0, (post.likes || 0) - 1);
+                post.likedByCurrent = false;
+            } else {
+                post.likes = (post.likes || 0) + 1;
+                post.likedByCurrent = true;
+            }
+
+            savePosts();
+            renderFeed(); // 简单刷新
+        }
+
+        // 添加评论
+        function addComment(postId, text) {
+            const post = posts.find(p => p.id === postId);
+            if (!post || !text.trim()) return;
+
+            if (!post.comments) post.comments = [];
+            post.comments.push({
+                userName: currentUser.name,
+                avatar: currentUser.avatar,
+                text: text.substring(0, 120)  // 限制长度
+            });
+
+            savePosts();
+            renderFeed();
+
+            // 自动展开评论
+            setTimeout(() => {
+                const sec = document.getElementById(`comments-${postId}`);
+                if (sec) sec.classList.add('show');
+            }, 50);
+        }
+
+        // 发布新朋友圈
+        function publishPost() {
+            const content = contentInput.value.trim();
+            if (!content && !uploadedImageBase64) {
+                alert('写点什么或上传一张照片吧～');
+                return;
+            }
+
+            const newPost = {
+                id: 'post_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                userName: currentUser.name,
+                userAvatar: currentUser.avatar,
+                content: content || '分享我的过年照片📷',
+                image: uploadedImageBase64 || null,  // 如果没有图片，可空
+                timestamp: Date.now(),
+                likes: 0,
+                likedByCurrent: false,
+                comments: []
+            };
+
+            posts.push(newPost);
+            savePosts();
+
+            // 清空输入
+            contentInput.value = '';
+            imageUpload.value = '';
+            imagePreview.style.display = 'none';
+            imagePreview.src = '#';
+            uploadedImageBase64 = null;
+
+            renderFeed();
+        }
+
+        publishBtn.addEventListener('click', publishPost);
+
+        // 初始渲染
+        renderFeed();
+
+        // 可选：模拟定期检查更新(为了同一个链接下看到别人发布的内容，需手动刷新页面)
+        // 简单方案：每10秒自动刷新数据（仅重新从localStorage读取）——但需保留点赞状态等
+        setInterval(() => {
+            // 重新拉取localstorage 并合并本地like状态(可能丢失，但为了看到新内容，可行)
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const freshPosts = JSON.parse(stored);
+                    // 合并当前内存中的 likedByCurrent 状态 (避免点赞状态被覆盖)
+                    // 简易处理：直接用新数据但保留当前用户的点赞标记 (但可能会丢)
+                    // 更好的做法：用新数据并渲染，但最好保留like标记，这里我们用合并策略
+                    if (freshPosts && Array.isArray(freshPosts)) {
+                        // 保留当前user在每个post上的点赞标记（通过id匹配）
+                        const oldPosts = posts;
+                        const merged = freshPosts.map(fp => {
+                            const old = oldPosts.find(o => o.id === fp.id);
+                            if (old) {
+                                return {
+                                    ...fp,
+                                    likedByCurrent: old.likedByCurrent // 保留当前点赞状态
+                                };
+                            }
+                            return {...fp, likedByCurrent: false};
+                        });
+                        posts = merged;
+                        savePosts(); // 将合并后的存回（注意这会覆盖别人刚发的评论? 不太安全，但为了demo）
+                        // 更安全：仅更新渲染，不覆盖存储。但我们为了演示简洁。
+                        renderFeed();
+                    }
+                }
+            } catch (e) {}
+        }, 8000); // 每8秒检查一次“新内容”
+
+    })();
+</script>
+</body>
+</html>
